@@ -68,11 +68,24 @@ namespace CastleGrimtol.Project
           case "look":
             Look();
             break;
+          case "drop":
+            Drop(option);
+            break;
           case "inventory":
             Inventory();
             break;
           case "reset":
             Reset();
+            break;
+          case "help":
+            Help();
+            break;
+          case "talk":
+            if (CurrentRoom.Name == "Auditorium" && CurrentPlayer.HasFishInEar)
+            {
+              CurrentRoom.CallBack(CurrentPlayer, CurrentRoom);
+            }
+            else Console.WriteLine("Blah blah blah");
             break;
           case "quit":
             Quit();
@@ -94,26 +107,46 @@ namespace CastleGrimtol.Project
 
     public void Help()
     {
-      Console.WriteLine("No help!  Figure it out!");
+      Console.WriteLine("You can: \nTake\nUse\nDrop\nGo\nTalk\nLook\nInventory\nReset\nQuit\n");
     }
 
     public void Inventory()
     {
+      Console.WriteLine("You have:");
       foreach (Item thing in CurrentPlayer.Inventory)
       {
         Console.WriteLine(thing.Name + " - " + thing.Description);
       }
     }
 
+    public void Drop(string itemName)
+    {
+      Item thing = CurrentPlayer.Inventory.Find(el => el.Name == itemName);
+
+      if (thing != null)
+      {
+        CurrentPlayer.Inventory.Remove(thing);
+        CurrentRoom.Items.Add(thing);
+
+        Console.WriteLine("You dropped the " + itemName);
+      }
+    }
+
+
     public void Look()
     {
       Console.WriteLine(CurrentRoom.Description);
+      Console.WriteLine("In this room you see:");
+      foreach (Item thing in CurrentRoom.Items)
+      {
+        Console.WriteLine("A " + thing.Name);
+      }
     }
 
     public void Quit()
     {
-      Console.WriteLine("Goodbye!");
       Running = false;
+      Console.WriteLine("Goodbye!");
     }
 
     public void Reset()
@@ -127,11 +160,11 @@ namespace CastleGrimtol.Project
       Item fish = new Item("fish", "a small yellow fish", (Player p, Room r) => p.HasFishInEar = true);
 
       //rooms
-      Room start = new Room("sleep chamber", "This is the dimly lit room where you woke up.  There is a door to the north.");
-      Room hallway = new Room("hallway", "A boring hallway.  Exits to the east, west, and south.");
-      Room tank = new Room("fish tank", "There's a fish tank in this room. Exits to the east.");
-      Room auditorium = new Room("auditorium", "There's a grotesque alien here blocking the door to the north, and a door to the east.");
-      Room victory = new Room("buffet", "You made it to the space buffet! Good job!");
+      Room start = new Room("Sleep Chamber", "This is the dimly lit room where you woke up.  There is a door to the north.");
+      Room hallway = new Room("Hallway", "A boring hallway.  Exits to the east, west, and south.");
+      Room tank = new Room("Fish Tank", "There's a fish tank in this room. Exits to the east.");
+      Room auditorium = new Room("Auditorium", "There's a grotesque alien here blocking the door to the north, and a door to the east.");
+      Room victory = new Room("Space Buffet", "You made it to the space buffet! Good job!");
 
       //room links
       start.Exits.Add("north", hallway);
@@ -151,7 +184,6 @@ namespace CastleGrimtol.Project
 
       auditorium.CallBack = (Player p, IRoom r) =>
       {
-        Console.WriteLine("There's a large, grotesque alien blocking the north exit of the room.");
 
         if (p.HasFishInEar)
         {
@@ -172,8 +204,7 @@ namespace CastleGrimtol.Project
             Console.WriteLine("Well, you've hurt his feelings now.  He sulks off.");
             auditorium.CallBack = (Player _p, IRoom _r) => { };
             auditorium.Exits.Add("north", victory);
-
-
+            auditorium.Description = "This is an auditorium with exits to the north and west.";
           }
 
         }
@@ -193,7 +224,7 @@ namespace CastleGrimtol.Project
 
       Console.Clear();
 
-      Console.WriteLine("INTRO TEXT");
+      Console.WriteLine("You wake up from hypersleep.");
     }
 
     public void StartGame()
